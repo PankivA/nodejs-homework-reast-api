@@ -3,8 +3,26 @@ const {Contact} = require("../models/contact");
 const { HttpError, wrapper } = require("../helpers");
 
 const getAll = async (req, res) => {
-  const result = await Contact.find();
-  res.json(result);
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20 } = req.query;
+  const favorite = req.query.favorite === "true" ? true : false;
+
+  const skip = (page - 1) * limit;
+
+  const totalContacts = await Contact.countDocuments({ owner });
+
+  let result = await Contact.find({ owner }, "", { skip, limit });
+
+  if (req.query.favorite) {
+    result = result.filter((contact) => contact.favorite === favorite);
+  }
+
+  res.json({
+    totalContacts,
+    currentPage: page,
+    totalPages: Math.ceil(totalContacts / limit),
+    contacts: result,
+  });
 };
 
 const getById = async (req, res) => {
@@ -17,7 +35,8 @@ const getById = async (req, res) => {
 };
 
 const addItem = async (req, res) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
     res.status(201).json(result);
 };
 
