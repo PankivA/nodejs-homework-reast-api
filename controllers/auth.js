@@ -53,7 +53,7 @@ const verify = async (req, res) => {
   const user = await User.findOne({ verificationCode });
 
   if (!user) {
-    throw HttpError(404, "User not found");
+    throw new HttpError(404, "User not found");
   }
 
   await User.findByIdAndUpdate(user._id, {
@@ -71,11 +71,11 @@ const resendVerify = async (req, res) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw HttpError(401);
+    throw new HttpError(401);
   }
 
   if (user.verify) {
-    throw HttpError(400, "Verification has already been passed");
+    throw new HttpError(400, "Verification has already been passed");
   }
 
   const veryfyEmail = {
@@ -101,7 +101,7 @@ const login = async (req, res) => {
   }
 
   if (!user.verify) {
-    throw HttpError(401);
+    throw new HttpError(401);
   }
 
   const passwordCompare = await bcrypt.compare(password, user.password);
